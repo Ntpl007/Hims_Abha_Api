@@ -1,14 +1,17 @@
-﻿using ABHA_API.ViewModel;
+using ABHA_API.ViewModel;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -557,10 +560,321 @@ namespace ABHA_API.Controllers
         }
 
 
-        //Madhu Start 
-        //Madhu end
+    //Madhu Start 
+    //Madhu end
 
-        //Naveen start
-        //Naveen end
-    }
+    //Naveen start
+    //Naveen end
+
+    //Download ABHA_CARDS Start
+        [HttpGet]
+        [Route("[action]")]
+        public string GenerateTransatctionIdBasedOnAuthMode(string AuthMode, string healthid)
+        {
+          ServicePointManager.Expect100Continue = true;
+          ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls
+                 | SecurityProtocolType.Tls11
+                 | SecurityProtocolType.Tls12;
+          string bearerToken = GenerateToken();
+          client = new HttpClient();
+          client.BaseAddress = new Uri(_AbhaKeyConfigurations.abdmABHAHealthApiUrl);
+          client.DefaultRequestHeaders.Accept.Clear();
+          client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
+          client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+          client.DefaultRequestHeaders.Add("Accept-Language", "en-US");
+          var json = "";
+          HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "v1/auth/init");
+          request.Content = new StringContent("{\"authMethod\":\"" + AuthMode + "\", \"healthid\":\"" + healthid + "\"}", Encoding.UTF8,
+                                    "application/json");
+
+          using (HttpResponseMessage response = client.SendAsync(request).Result)
+          {
+            if (response.IsSuccessStatusCode)
+            {
+              using (HttpContent content = response.Content)
+              {
+                json = content.ReadAsStringAsync().Result;
+              }
+            }
+          }
+          return json;
+        }
+
+    //Verfiywith Aaadharotp for get Abha cards --Start
+
+        [HttpGet]
+        [Route("[action]")]
+        public string ConfirmWithAadhaarOtp(int Otp, string transactionId)
+        {
+          ServicePointManager.Expect100Continue = true;
+          ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls
+                 | SecurityProtocolType.Tls11
+                 | SecurityProtocolType.Tls12
+                 ;
+          string bearerToken = GenerateToken();
+          client = new HttpClient();
+          client.BaseAddress = new Uri(_AbhaKeyConfigurations.abdmABHAHealthApiUrl);
+          client.DefaultRequestHeaders.Accept.Clear();
+          client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
+          client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+          client.DefaultRequestHeaders.Add("Accept-Language", "en-US");
+          var json = "";
+          HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "v1/auth/confirmWithAadhaarOtp");
+          request.Content = new StringContent("{\"otp\":\"" + Otp + "\", \"txnId\":\"" + transactionId + "\"}", Encoding.UTF8,
+                                  "application/json");
+          using (HttpResponseMessage response = client.SendAsync(request).Result)
+          {
+            if (response.IsSuccessStatusCode)
+            {
+              using (HttpContent content = response.Content)
+              {
+                json = content.ReadAsStringAsync().Result;
+            
+              }
+            }
+          }
+          return json;
+        }
+
+    //Verfiywith Aaadharotp for get Abha cards --End
+
+    //Verfiywith Aaadharotp for get Abha cards --Start
+
+        [HttpGet]
+        [Route("[action]")]
+        public string ConfirmWithMobileOTP(int Otp, string transactionId)
+        {
+          ServicePointManager.Expect100Continue = true;
+          ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls
+                 | SecurityProtocolType.Tls11
+                 | SecurityProtocolType.Tls12
+                 ;
+          string bearerToken = GenerateToken();
+          client = new HttpClient();
+          client.BaseAddress = new Uri(_AbhaKeyConfigurations.abdmABHAHealthApiUrl);
+          client.DefaultRequestHeaders.Accept.Clear();
+          client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
+          client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+          client.DefaultRequestHeaders.Add("Accept-Language", "en-US");
+          var json = "";
+          HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "v1/auth/confirmWithMobileOTP");
+          //request.Content = new StringContent("{\"otp\":" + Otp + ", \"restrictions\":" + restrictions + ",\"txnId\":\"" + transactionId + "\"}");
+          request.Content = new StringContent("{\"otp\":\"" + Otp + "\", \"txnId\":\"" + transactionId + "\"}", Encoding.UTF8,
+                                  "application/json");
+          using (HttpResponseMessage response = client.SendAsync(request).Result)
+          {
+            if (response.IsSuccessStatusCode)
+            {
+              using (HttpContent content = response.Content)
+              {
+                json = content.ReadAsStringAsync().Result;
+              }
+            }
+          }
+          return json;
+        }
+
+    //Verfiywith Aaadharotp for get Abha cards --End
+
+    //ABHA_CARD_PDF Start
+        [HttpGet]
+        [Route("[action]")]
+        public async Task<IActionResult> GetAbhaCardPdf(string Token)
+        {
+          try
+          {
+            ServicePointManager.Expect100Continue = true;
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls
+                   | SecurityProtocolType.Tls11
+                   | SecurityProtocolType.Tls12;
+            string bearerToken = GenerateToken();
+            client = new HttpClient();
+            client.BaseAddress = new Uri(_AbhaKeyConfigurations.abdmABHAHealthApiUrl);
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            client.DefaultRequestHeaders.Add("Accept-Language", "en-US");
+            client.DefaultRequestHeaders.Add("X-Token", "Bearer " + Token);
+            byte[] responce = null;
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, "v1/account/getCard");
+            string pdfFileName = "";
+            using (HttpResponseMessage response = client.SendAsync(request).Result)
+            {
+              if (response.IsSuccessStatusCode)
+              {
+                using (HttpContent content = response.Content)
+                {
+                  responce = content.ReadAsByteArrayAsync().Result;
+                  BinaryFormatter bf = new BinaryFormatter();
+                  MemoryStream ms = new MemoryStream();
+                  pdfFileName = "id.pdf";
+            
+                  string path = "ABHA_Cards/" + pdfFileName;
+                  System.IO.File.WriteAllBytes(path, responce);
+                }
+              }
+            }
+            return await DownloadFile(pdfFileName);
+          }
+          catch (Exception ex)
+          {
+            throw ex;
+          }
+        }
+
+        private async Task<IActionResult> DownloadFile(string filename)
+        {
+          var DownlodedFilepath = Path.Combine(Directory.GetCurrentDirectory(),"ABHA_Cards", filename);
+          var provider = new FileExtensionContentTypeProvider();
+          if (!provider.TryGetContentType(DownlodedFilepath, out var contenttype))
+          {
+            contenttype = "application/octet-stream";
+          }
+
+          var bytes = await System.IO.File.ReadAllBytesAsync(DownlodedFilepath);
+          return File(bytes, contenttype, Path.GetFileName(DownlodedFilepath));
+
+        }
+
+    //ABHA_CARD_PDF End
+
+    //ABHA_CARD_Svg Start
+        [HttpGet]
+        [Route("[action]")]
+        public async Task<IActionResult> GetAbhaCardSvg(string Token)
+        {
+          try
+          {
+            ServicePointManager.Expect100Continue = true;
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls
+                   | SecurityProtocolType.Tls11
+                   | SecurityProtocolType.Tls12;
+            string bearerToken = GenerateToken();
+            client = new HttpClient();
+            client.BaseAddress = new Uri(_AbhaKeyConfigurations.abdmABHAHealthApiUrl);
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            client.DefaultRequestHeaders.Add("Accept-Language", "en-US");
+            client.DefaultRequestHeaders.Add("X-Token", "Bearer " + Token);
+            byte[] responce = null;
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, "v1/account/getSvgCard");
+            string svgFileName = "";
+            using (HttpResponseMessage response = client.SendAsync(request).Result)
+            {
+              if (response.IsSuccessStatusCode)
+              {
+                using (HttpContent content = response.Content)
+                {
+                  responce = content.ReadAsByteArrayAsync().Result;
+                  BinaryFormatter bf = new BinaryFormatter();
+                  MemoryStream ms = new MemoryStream();
+                  svgFileName = "id.svg";
+
+                  string path = "ABHA_Cards/" + svgFileName;
+                  System.IO.File.WriteAllBytes(path, responce);
+                }
+              }
+            }
+            return await DownloadFile(svgFileName);
+          }
+          catch (Exception ex)
+          {
+            throw ex;
+          }
+        }
+
+    //ABHA_CARD_Svg End
+
+    //ABHA_CARD_Png Start
+        [HttpGet]
+        [Route("[action]")]
+        public async Task<IActionResult> GetAbhaCardPng(string Token)
+        {
+          try
+          {
+            ServicePointManager.Expect100Continue = true;
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls
+                   | SecurityProtocolType.Tls11
+                   | SecurityProtocolType.Tls12;
+            string bearerToken = GenerateToken();
+            client = new HttpClient();
+            client.BaseAddress = new Uri(_AbhaKeyConfigurations.abdmABHAHealthApiUrl);
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            client.DefaultRequestHeaders.Add("Accept-Language", "en-US");
+            client.DefaultRequestHeaders.Add("X-Token", "Bearer " + Token);
+            byte[] responce = null;
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, "v1/account/getPngCard");
+            string pngFileName = "";
+            using (HttpResponseMessage response = client.SendAsync(request).Result)
+            {
+              if (response.IsSuccessStatusCode)
+              {
+                using (HttpContent content = response.Content)
+                {
+                  responce = content.ReadAsByteArrayAsync().Result;
+                  BinaryFormatter bf = new BinaryFormatter();
+                  MemoryStream ms = new MemoryStream();
+                  pngFileName = "id.png";
+
+                  string path = "ABHA_Cards/" + pngFileName;
+                  System.IO.File.WriteAllBytes(path, responce);
+                }
+              }
+            }
+            return await DownloadFile(pngFileName);
+          }
+          catch (Exception ex)
+          {
+            throw ex;
+          }
+        }
+    
+    //ABHA_CARD_Png End
+
+    //ABHA_CARD_QrCode Start
+        [HttpGet]
+        [Route("[action]")]
+        public JsonResult GetAbhaCardQrCode(string Token)
+        {
+
+          ServicePointManager.Expect100Continue = true;
+          ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls
+                 | SecurityProtocolType.Tls11
+                 | SecurityProtocolType.Tls12;
+          string bearerToken = GenerateToken();
+          client = new HttpClient();
+          client.BaseAddress = new Uri(_AbhaKeyConfigurations.abdmABHAHealthApiUrl);
+          client.DefaultRequestHeaders.Accept.Clear();
+          client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
+          client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+          client.DefaultRequestHeaders.Add("Accept-Language", "en-US");
+          //client.DefaultRequestHeaders.Add("T-Token", Token);
+
+
+          var json = "";
+          //  string re = JsonConvert.SerializeObject(aa);
+          HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, "v1/account/qrCode");
+          request.Content = new StringContent("{\"X-Token\":\"" + Token + "\"}", Encoding.UTF8,
+                                  "application/json");
+
+
+          using (HttpResponseMessage response = client.SendAsync(request).Result)
+          {
+            using (HttpContent content = response.Content)
+            {
+              json = content.ReadAsStringAsync().Result;
+            }
+
+            JsonResult result = new JsonResult(JsonConvert.DeserializeObject(json));
+            return result;
+          }
+        }
+
+    //ABHA_CARD_QrCode End
+
+    //Download ABHA_CARDS End
+  }
 }
