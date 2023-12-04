@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
@@ -21,11 +21,6 @@
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="7.0.0" />
     <PackageReference Include="System.IO.FileSystem" Version="4.3.0" />
 	
-  </ItemGroup>
-  
-
-  <ItemGroup>
-    <Folder Include="ABHA_Cards\" />
   </ItemGroup>
 
 </Project>
