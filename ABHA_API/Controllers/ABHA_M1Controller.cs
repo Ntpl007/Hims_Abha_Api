@@ -709,7 +709,7 @@ namespace ABHA_API.Controllers
                   MemoryStream ms = new MemoryStream();
                   pdfFileName = "id.pdf";
             
-                  string path = "ABHA_Cards/" + pdfFileName;
+                  string path =  pdfFileName;
                   System.IO.File.WriteAllBytes(path, responce);
                 }
               }
@@ -724,7 +724,7 @@ namespace ABHA_API.Controllers
 
         private async Task<IActionResult> DownloadFile(string filename)
         {
-          var DownlodedFilepath = Path.Combine(Directory.GetCurrentDirectory(),"ABHA_Cards", filename);
+          var DownlodedFilepath = Path.Combine(Directory.GetCurrentDirectory(), filename);
           var provider = new FileExtensionContentTypeProvider();
           if (!provider.TryGetContentType(DownlodedFilepath, out var contenttype))
           {
@@ -771,7 +771,7 @@ namespace ABHA_API.Controllers
                   MemoryStream ms = new MemoryStream();
                   svgFileName = "id.svg";
 
-                  string path = "ABHA_Cards/" + svgFileName;
+                  string path =  svgFileName;
                   System.IO.File.WriteAllBytes(path, responce);
                 }
               }
@@ -819,7 +819,7 @@ namespace ABHA_API.Controllers
                   MemoryStream ms = new MemoryStream();
                   pngFileName = "id.png";
 
-                  string path = "ABHA_Cards/" + pngFileName;
+                  string path =  pngFileName;
                   System.IO.File.WriteAllBytes(path, responce);
                 }
               }
